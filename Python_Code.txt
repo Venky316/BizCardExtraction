@@ -1,0 +1,266 @@
+###############################################################################################################################
+##
+## This contains the Python code to extract data from image, process the data, display the data using streamlit and save, update & delete in SQL database.
+## Developer : Venkatesh Shankar
+## Developed Date : 03rd February 2024
+## Developed Time : 10.06 A.M (IST)
+## The contents of the program are subjected to copyrights.
+##
+###############################################################################################################################
+##
+## Step 1: Create SQL Table for Image Details
+##
+###############################################################################################################################
+
+create table imgtable(
+	pic_name VARCHAR,
+	company_name VARCHAR,
+	contact_person VARCHAR,
+	person_role VARCHAR,
+	contact_address VARCHAR,
+	contact_no VARCHAR,
+	email VARCHAR,
+	website VARCHAR
+);
+
+
+###############################################################################################################################
+##
+## Step 2: Create the streamlit application using Python Coding
+##
+###############################################################################################################################
+
+import streamlit as st
+import time
+import pandas as pd
+from PIL import Image
+import easyocr
+import cv2
+import psycopg2
+
+st.set_page_config(page_title='Extracting Business Card Data',layout='wide',initial_sidebar_state='auto')
+st.title(':red[Business Card Data]')
+st.caption(body='This app intends to extract the data about the business card through image processing technique and save the card details in the database.:thumbsup:')
+
+getfieldlist = ['company_name','contact_person','person_role','contact_address','contact_no','email','website']
+client = psycopg2.connect(host='localhost',database='postgres',user='postgres',password='Venky@24121993')
+cur = client.cursor()
+
+getimage = st.file_uploader('Select an Image',['png', 'jpg'])
+if(getimage):
+    getfilename = getimage.name
+    reader = easyocr.Reader(['en'])
+    getpath = 'E://Guvi - DS/Capstones/Capstone 3 -Extracting Business Card Data with OCR/' + getfilename
+    readfile = reader.readtext(getpath)
+    gettext = list()
+    for i in readfile:
+        gettext.append(i[1])
+
+    #'Card 1 details'
+    if(getfilename=='1.png'):
+        col1,col2=st.columns([0.8,1.2])
+        getname = gettext[0]
+        getcompname = str.capitalize(gettext[7]) + ' ' + str.capitalize(gettext[9])
+        getcomprole = str.capitalize(gettext[1])
+        splitstreet = gettext[6].split(',')
+        getstreet = splitstreet[0].replace(',','')
+        getcity = (splitstreet[1].replace(';','')).replace(' ','')
+        splitstate = gettext[8].split(' ')
+        getstate = splitstate[0]
+        getpincode = splitstate[1]
+        getaddress = getstreet + '\n' + getcity + '\n' + getstate + '\n' + getpincode
+        getcontact = gettext[2] + ' , ' + gettext[3]
+        getemail = gettext[5]
+        getwebsite = (gettext[4].replace('WWW ','www.')).replace('I','1')
+        getdict = {'Company_Name':getcompname,'Contact_Person':getname,'Designation':getcomprole,'Company_Address':getaddress,'Contact':getcontact,'E-mail':getemail,'Website':getwebsite}
+        
+        with col1:
+            getpic = Image.open(getpath)
+            st.image(getpic)
+            readimg = cv2.imread(getpath)
+            ret,thresh=cv2.threshold(readimg,70,255,0)
+        with col2:
+            st.header(getdict['Company_Name'])
+            st.write(':mens:',getdict['Contact_Person'])
+            st.write(':clipboard:',getdict['Designation'])
+            st.write(':office:',getdict['Company_Address'])
+            st.write(':telephone:',getdict['Contact'])
+            st.write(':email:',getdict['E-mail'])
+            st.write(':globe_with_meridians:','For more information about us, please visit ',getdict['Website'])
+
+    #'Card 2 details'
+    elif(getfilename=='2.png'):
+        col1,col2 = st.columns([0.8,1.2])        
+        getname = str.capitalize(gettext[0])
+        getcompname = str.capitalize(gettext[8]) + ' ' + str.capitalize(gettext[10])
+        getcomprole = gettext[1]
+        getstreet = gettext[6].replace('global','Global') + ' ' + gettext[11].replace(' ,','')
+        getcity = gettext[7].replace(',','')
+        splitstate = gettext[9].split(' ')
+        getstate = splitstate[0]
+        getpincode = splitstate[1]
+        getaddress = getstreet + '\n' + getcity + '\n' + getstate + '\n' + getpincode
+        getcontact = '+' + gettext[2]
+        getemail = gettext[3]
+        getwebsite = gettext[4].lower() + '.' + gettext[5]
+        getdict = {'Company_Name':getcompname,'Contact_Person':getname,'Designation':getcomprole,'Company_Address':getaddress,'Contact':getcontact,'E-mail':getemail,'Website':getwebsite}
+
+        with col1:
+            getpic = Image.open(getpath)
+            st.image(getpic)
+            readimg = cv2.imread(getpath)
+            ret,thresh=cv2.threshold(readimg,70,255,0)
+
+        with col2:
+            st.header(getdict['Company_Name'])
+            st.write(':mens:',getdict['Contact_Person'])
+            st.write(':clipboard:',getdict['Designation'])
+            st.write(':office:',getdict['Company_Address'])
+            st.write(':telephone:',getdict['Contact'])
+            st.write(':email:',getdict['E-mail'])
+            st.write(':globe_with_meridians:','For more information about us, please visit ',getdict['Website'])
+
+    #'Card 3 details'
+    elif(getfilename=='3.png'):
+        col1,col2 = st.columns([0.8,1.2])        
+        getname = str.capitalize(gettext[0])
+        getcompname = str.capitalize(gettext[7]) + ' ' + str.capitalize(gettext[8])
+        getcomprole = gettext[1]
+        splitstreet = gettext[2].split(',')
+        getstreet = splitstreet[0].replace('St ','St')
+        getcity = splitstreet[1]
+        splitstate = gettext[3].split(' ')
+        getstate = splitstate[0]
+        getpincode = splitstate[1]
+        getaddress = getstreet + '\n' + getcity + '\n' + getstate + '\n' + getpincode
+        getcontact = gettext[4]
+        getemail = gettext[5]
+        getwebsite = gettext[6].replace('www ','www.')
+        getdict = {'Company_Name':getcompname,'Contact_Person':getname,'Designation':getcomprole,'Company_Address':getaddress,'Contact':getcontact,'E-mail':getemail,'Website':getwebsite}
+
+        with col1:
+            getpic = Image.open(getpath)
+            st.image(getpic)
+            readimg = cv2.imread(getpath)
+            ret,thresh=cv2.threshold(readimg,70,255,0)
+
+        with col2:
+            st.header(getdict['Company_Name'])
+            st.write(':mens:',getdict['Contact_Person'])
+            st.write(':clipboard:',getdict['Designation'])
+            st.write(':office:',getdict['Company_Address'])
+            st.write(':telephone:',getdict['Contact'])
+            st.write(':email:',getdict['E-mail'])
+            st.write(':globe_with_meridians:','For more information about us, please visit ',getdict['Website'])
+
+    #'Card 4 details'
+    elif(getfilename=='4.png'):
+        col1,col2 = st.columns([0.8,1.2])        
+        getname = str.capitalize(gettext[0])
+        getcompname = str.capitalize(gettext[6]) + ' ' + str.capitalize(gettext[8])
+        getcomprole = gettext[1]
+        splitstreet = gettext[2].split(',')
+        getstreet = splitstreet[0]
+        getcity = splitstreet[2].replace(' ','')
+        getstate = splitstreet[3].replace(';','')
+        getpincode = gettext[3]
+        getaddress = getstreet + '\n' + getcity + '\n' + getstate + '\n' + getpincode
+        getcontact = gettext[4]
+        getemail = gettext[5]
+        getwebsite = gettext[7].lower()
+        getdict = {'Company_Name':getcompname,'Contact_Person':getname,'Designation':getcomprole,'Company_Address':getaddress,'Contact':getcontact,'E-mail':getemail,'Website':getwebsite}
+
+        with col1:
+            getpic = Image.open(getpath)
+            st.image(getpic)
+            readimg = cv2.imread(getpath)
+            ret,thresh=cv2.threshold(readimg,70,255,0)
+
+        with col2:
+            st.header(getdict['Company_Name'])
+            st.write(':mens:',getdict['Contact_Person'])
+            st.write(':clipboard:',getdict['Designation'])
+            st.write(':office:',getdict['Company_Address'])
+            st.write(':telephone:',getdict['Contact'])
+            st.write(':email:',getdict['E-mail'])
+            st.write(':globe_with_meridians:','For more information about us, please visit ',getdict['Website'])
+
+    #'Card 5 details'
+    elif(getfilename=='5.png'):
+        col1,col2 = st.columns([0.8,1.2])        
+        getname = str.capitalize(gettext[0])
+        getcompname = gettext[7]
+        getcomprole = gettext[1]
+        splitstreet = gettext[2].split(',')
+        getstreet = splitstreet[0]
+        splitstate = splitstreet[1].split(';')
+        getcity = splitstate[0].replace(' ','')
+        getstate = (splitstate[1].replace(' ','')).replace(',','')
+        getpincode = gettext[3]
+        getaddress = getstreet + '\n' + getcity + '\n' + getstate + '\n' + getpincode        
+        getcontact = gettext[4]
+        getemail = gettext[5]
+        getwebsite = gettext[6].replace('com','.com')
+        getdict = {'Company_Name':getcompname,'Contact_Person':getname,'Designation':getcomprole,'Company_Address':getaddress,'Contact':getcontact,'E-mail':getemail,'Website':getwebsite}
+
+        with col1:
+            getpic = Image.open(getpath)
+            st.image(getpic)
+            readimg = cv2.imread(getpath)
+            ret,thresh=cv2.threshold(readimg,70,255,0)
+
+        with col2:
+            st.header(getdict['Company_Name'])
+            st.write(':mens:',getdict['Contact_Person'])
+            st.write(':clipboard:',getdict['Designation'])
+            st.write(':office:',getdict['Company_Address'])
+            st.write(':telephone:',getdict['Contact'])
+            st.write(':email:',getdict['E-mail'])
+            st.write(':globe_with_meridians:','For more information about us, please visit ',getdict['Website'])        
+            st.write(' ')
+
+if(getimage):
+    col1,col2 = st.columns([0.8,1.2])
+    with col2:
+        getopt = st.selectbox('Select an Option',['Save','Update','Delete'],index=None)
+        if(getopt == 'Save'):
+            getsaveprog = st.progress(0,'Saving to the Database')
+            for i in range(100):
+                time.sleep(0.01)
+                getsaveprog.progress(i+1,'Saving to the Database')
+            cur.execute('INSERT INTO imgtable (pic_name,company_name,contact_person,person_role,contact_address,contact_no,email,website) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',(getfilename,getcompname,getname,getcomprole,getaddress,getcontact,getemail,getwebsite))
+            client.commit()
+            time.sleep(1)
+            getsaveprog.empty()
+            st.success('Data Saved Successfully')
+        elif(getopt == 'Update'):
+            getupdopt = st.selectbox('Select a field',getfieldlist,1)
+            if(getupdopt):
+                getupdtex = st.text_input(getupdopt,'')
+                if(getupdtex):
+                    getupdprog = st.progress(0,'Updating to the Database')
+                    for i in range(100):
+                        time.sleep(0.01)
+                        getupdprog.progress(i+1,'Updating to the Database')
+                    getcmd = 'UPDATE imgtable SET ' + getupdopt + '=%s where pic_name=%s'
+                    cur.execute(getcmd,(getupdtex,getfilename))
+                    client.commit()
+                    time.sleep(1)
+                    st.success('Data Updated Successfully')
+        elif(getopt == 'Delete'):
+            getdelprog = st.progress(0,'Deleting from Database')
+            for i in range(100):
+                time.sleep(0.01)
+                getdelprog.progress(i+1,'Deleting from Database')
+            cur.execute('DELETE FROM imgtable WHERE pic_name=%s',(getfilename,))
+            client.commit()
+            time.sleep(1)
+            getdelprog.empty()
+            st.success('Data Deleted Successfully')
+
+
+###############################################################################################################################
+##
+##Step 3: Run the streamlit application using the Terminal and enjoy...!!
+##
+###############################################################################################################################
