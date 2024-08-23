@@ -12,7 +12,12 @@
 ##
 ###############################################################################################################################
 
-create table imgtable(
+import psycopg2
+
+conn = psycopg2.connect(host='localhost',database='postgres',user='postgres',password='Venky@24121993')
+cur = conn.cursor()
+
+createimgtable = """create table imgtable(
 	pic_name VARCHAR,
 	company_name VARCHAR,
 	contact_person VARCHAR,
@@ -21,8 +26,10 @@ create table imgtable(
 	contact_no VARCHAR,
 	email VARCHAR,
 	website VARCHAR
-);
-
+)
+"""
+cur.execute(createimgtable)
+conn.commit()
 
 ###############################################################################################################################
 ##
